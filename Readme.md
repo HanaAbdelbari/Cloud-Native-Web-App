@@ -51,3 +51,56 @@ To run the application **outside of Docker**, follow these steps:
 ```bash
 git clone https://github.com/HanaAbdelbari/Cloud-Native-Web-App.git event-planner
 cd event-planner
+
+🐳 Docker and Kubernetes Deployment
+
+This section explains how to build the Docker image and deploy it to a local Kubernetes cluster (e.g., Minikube).
+
+⚙️ 1. Build and Push the Docker Image
+
+The included Dockerfile ensures all Node.js dependencies are installed and that static files (like index.html) are copied to /public so Express can serve them correctly.
+
+🏗️ Build the Image
+
+Replace hana345 with your Docker Hub username.
+
+docker build -t hana345/event-planner:latest .
+
+🚀 Push the Image
+
+Make the image available for your Kubernetes cluster.
+
+docker push hana345/event-planner:latest
+
+⚙️ 2. Apply Kubernetes Manifests
+
+The deployment is defined by two YAML files:
+
+event-planner-deployment.yaml
+
+event-planner-service.yaml
+
+📦 Deploy the Application
+
+Creates the Deployment and launches 2 Pod replicas.
+
+kubectl apply -f event-planner-deployment.yaml
+
+🌐 Expose the Service
+
+Creates a Service to expose the Pods externally (using NodePort on port 30080).
+
+kubectl apply -f event-planner-service.yaml
+
+✅ 3. Verify and Access
+🔍 Check Pod Status
+
+Confirm that both Pods are running successfully.
+
+kubectl get pods
+
+🌍 Access the App (Minikube)
+
+If using Minikube, run the following command to automatically open the app in your browser:
+
+minikube service event-planner-service
