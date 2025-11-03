@@ -52,7 +52,7 @@ To run the application **outside of Docker**, follow these steps:
 git clone https://github.com/HanaAbdelbari/Cloud-Native-Web-App.git event-planner
 cd event-planner
 
-🐳 Docker and Kubernetes Deployment
+###🐳 Docker and Kubernetes Deployment
 
 This section explains how to build the Docker image and deploy it to a local Kubernetes cluster (e.g., Minikube).
 
