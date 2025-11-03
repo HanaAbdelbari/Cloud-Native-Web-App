@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-planner-deployment
+  labels:
+    app: event-planner
+spec:
+
+  replicas: 2
+  selector:
+    matchLabels:
+      app: event-planner
+  template:
+    metadata:
+      labels:
+        app: event-planner
+    spec:
+      containers:
+        - name: event-planner-app
+
+          image: hana345/event-planner:latest
+          ports:
+            - containerPort: 3000
+
+          env:
+            - name: PORT
+              value: "3000"
