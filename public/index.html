@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>منظم الأحداث الاحترافي</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Heroicons -->
+    <script src="https://unpkg.com/heroicons@2.0.18/dist/heroicons.min.js"></script>
+
+    <style>
+        body { font-family: 'Tajawal', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+
+<div id="root"></div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+<script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function App() {
+      const [events, setEvents] = useState([]);
+      const [title, setTitle] = useState('');
+      const [date, setDate] = useState('');
+      const [token, setToken] = useState(localStorage.getItem('token') || '');
+      const [username, setUsername] = useState('');
+      const [password, setPassword] = useState('');
+      const [isLogin, setIsLogin] = useState(true);
+
+      const API = '/api'; // مهم: بدون localhost لأن الـ frontend والـ backend نفس السيرفر
+
+      const authFetch = (url, options = {}) => {
+        return fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      };
+
+      const loadEvents = async () => {
+        if (!token) return;
+        const res = await authFetch(`${API}/events`);
+        if (res.ok) setEvents(await res.json());
+      };
+
+      useEffect(() => { loadEvents(); }, [token]);
+
+      const handleAuth = async (e) => {
+        e.preventDefault();
+        const endpoint = isLogin ? 'login' : 'register';
+        const res = await fetch(`${API}/${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.token) {
+          setToken(data.token);
+          localStorage.setItem('token', data.token);
+          setUsername(''); setPassword('');
+        } else {
+          alert(data.error || 'حدث خطأ');
+        }
+      };
+
+      const addEvent = async (e) => {
+        e.preventDefault();
+        if (!title || !date) return;
+        await authFetch(`${API}/events`, {
+          method: 'POST',
+          body: JSON.stringify({ title, date })
+        });
+        setTitle(''); setDate('');
+        loadEvents();
+      };
+
+      const deleteEvent = async (id) => {
+        await authFetch(`${API}/events/${id}`, { method: 'DELETE' });
+        loadEvents();
+      };
+
+      if (!token) {
+        return (
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+              <h1 className="text-3xl font-bold text-indigo-700 text-center mb-8">
+                {isLogin ? 'مرحبًا بعودتك' : 'انضم إلينا'}
+              </h1>
+              <form onSubmit={handleAuth} className="space-y-5">
+                <input
+                  type="text"
+                  placeholder="اسم المستخدم"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                  required
+                />
+                <input
+                  type="password"
+                  placeholder="كلمة المرور"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition transform hover:scale-105"
+                >
+                  {isLogin ? 'تسجيل الدخول' : 'إنشاء حساب'}
+                </button>
+              </form>
+              <p className="text-center mt-6 text-gray-600">
+                {isLogin ? 'ليس لديك حساب؟ ' : 'لديك حساب؟ '}
+                <button
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="text-indigo-600 font-bold hover:underline"
+                >
+                  {isLogin ? 'سجل الآن' : 'سجل دخول'}
+                </button>
+              </p>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="container mx-auto p-4 max-w-4xl">
+          {/* Header */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-indigo-700">منظم الأحداث</h1>
+            <button
+              onClick={() => { localStorage.clear(); setToken(''); }}
+              className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-600 transition flex items-center gap-2"
+            >
+              تسجيل خروج
+            </button>
+          </div>
+
+          {/* Add Event Form */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">إضافة حدث جديد</h2>
+            <form onSubmit={addEvent} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                placeholder="عنوان الحدث"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                required
+              />
+              <input
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                required
+              />
+              <button
+                type="submit"
+                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2"
+              >
+                إضافة
+              </button>
+            </form>
+          </div>
+
+          {/* Events List */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">الأحداث القادمة</h2>
+            {events.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                لا توجد أحداث بعد. أضف حدثًا جديدًا!
+              </div>
+            ) : (
+              events.map(event => (
+                <div
+                  key={event._id}
+                  className="bg-white rounded-xl shadow-md p-5 flex justify-between items-center hover:shadow-xl transition transform hover:-translate-y-1"
+                >
+                  <div>
+                    <h3 className="text-xl font-bold text-indigo-700">{event.title}</h3>
+                    <p className="text-gray-600 flex items-center gap-2 mt-1">
+                      {event.date}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => deleteEvent(event._id)}
+                    className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition"
+                  >
+                    حذف
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+</script>
+</body>
+</html>
