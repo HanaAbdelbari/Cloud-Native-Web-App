@@ -9,6 +9,8 @@ COPY app.js .
 
 COPY .env .
 
+COPY public ./public
+
 EXPOSE 3000
 
 CMD [ "node", "app.js" ]
